@@ -9,12 +9,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "gulp": "^3.9.1",
-    "gulp-json-editor": "^2.2.1",
     "async": "^2.1.5",
     "excel": "^0.1.7",
+    "gulp": "^3.9.1",
+    "gulp-json-editor": "^2.2.1",
     "gulp-util": "^3.0.8",
     "point-in-polygon": "^1.0.1",
+    "request": "^2.81.0",
     "scrape-it": "^3.3.0"
   }
 }

@@ -1,11 +1,11 @@
 const gulp = require('gulp');
 const gutil = require('gulp-util');
-const http = require('http');
 const fs = require('fs');
 const parseXlsx = require('excel');
 const scrapeIt = require("scrape-it");
 const async = require('async');
 const jeditor = require("gulp-json-editor");
+const request = require('request');
 
 gulp.task('default', function(callback) {
   async.auto({
@@ -51,22 +51,17 @@ function scarpArticleUrl (cb) {
 function scarpXlsxUrl (results, cb) {
   let scrapOtions = {
     achors: {
-      listItem: 'li',
+      listItem: '.article-body > p + ul',
       data: {
-        title: 'a',
         link: { selector: 'a', attr: 'href'}
       }
     }
   }
 
   scrapeIt(results.scarpArticleUrl, scrapOtions).then(page => {
-      var filterAnchors = page.achors.filter((item) =>{
-        return (item.link && item.link.search('.xlsx') != -1) ? true : false
-      })
-
-      if (filterAnchors.length > 0) {
-        gutil.log(gutil.colors.magenta('Xlsx Url: '), filterAnchors[0].link);
-        cb(null, filterAnchors[0].link)
+      if (page.achors[1] != undefined) {
+        gutil.log(gutil.colors.magenta('Xlsx Url: '), page.achors[1].link);
+        cb(null, page.achors[1].link)
       } else {
         // TODO: enviar mensaje
         cb('Anchor with ".xlsx" No Found', null)
@@ -80,21 +75,23 @@ function scarpXlsxUrl (results, cb) {
 function getXlsxFile (results, cb) {
   gutil.log(gutil.colors.magenta('Descargarndo Xlsx...'));
   var file = fs.createWriteStream('gasolina.xlsx');
-  var request = http.get(results.scarpXlsxUrl, (response) => {
+
+  request(results.scarpXlsxUrl).on('response',  function (response) {
     if (response.statusCode === 200) {
       response.pipe(file).on('close', function(){
         gutil.log(gutil.colors.magenta('Descarga Xlsx Terminada'));
         cb(null, null)
       });
     } else {
-      // TODO: enviar mensaje
+      console.log('Descargarndo Xlsx2')
+      // TODO: enviar mensaje bot
       cb('Descarga de Xlsx Error: '+ response.statusCode, null)
     }
   });
 }
 
 function prossesFile (results, cb) {
-  gutil.log(gutil.colors.magenta('Processando Xlsx'));
+  gutil.log(gutil.colors.magenta('Procesando Xlsx'));
   parseXlsx('gasolina.xlsx', function(err, data) {
     if(err) throw err
     var gasData = getCleanJson( data )
